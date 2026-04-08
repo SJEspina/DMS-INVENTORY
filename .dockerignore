@@ -1,7 +1,7 @@
-/node_modules
-/vendor
-/.git
-/.github
+node_modules
+vendor
+.git
+.github
 .env
 storage/logs
 storage/framework/cache
