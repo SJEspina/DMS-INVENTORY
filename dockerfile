@@ -1,44 +1,29 @@
-FROM php:8.2-apache
+FROM webdevops/php-nginx:8.2
 
-# Install system dependencies
+WORKDIR /app
+
+COPY . /app
+
 RUN apt-get update && apt-get install -y \
-    git \
     curl \
+    git \
     unzip \
-    libpq-dev \
-    libzip-dev \
     zip \
+    libzip-dev \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
     nodejs \
-    npm \
-    && docker-php-ext-install pdo pdo_pgsql pgsql zip
+    npm
 
-# Install Composer
+RUN docker-php-ext-install pdo pdo_mysql
+
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Set working directory
-WORKDIR /var/www/html
-
-# Copy project
-COPY . .
-
-# Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader
-
-# Install frontend dependencies
 RUN npm install
 RUN npm run build
 
-# Enable Apache rewrite
-RUN a2enmod rewrite
+RUN chown -R application:application /app
 
-# Set Laravel public folder
-ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
-RUN sed -ri -e 's!/var/www/html!/var/www/html/public!g' \
-    /etc/apache2/sites-available/*.conf \
-    /etc/apache2/apache2.conf \
-    /etc/apache2/conf-available/*.conf
-
-# Fix permissions
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache || true
-
-CMD ["apache2-foreground"]
+EXPOSE 8080
