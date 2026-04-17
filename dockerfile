@@ -3,7 +3,6 @@ FROM webdevops/php-nginx:8.2
 WORKDIR /app
 
 COPY . /app
-
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # Install system deps
@@ -15,22 +14,26 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     libpng-dev \
     libonig-dev \
-    libxml2-dev
+    libxml2-dev \
+    libpq-dev
 
-# Install modern Node (VERY IMPORTANT)
+# Install Node.js
 RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs
 
-# PHP extension (optional but recommended)
-RUN docker-php-ext-install pdo_mysql || true
+# Install PHP extensions for PostgreSQL
+RUN docker-php-ext-install pdo_pgsql pgsql
 
-# Install dependencies
+# Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader
+
+# Install frontend dependencies
 RUN npm install
 RUN npm run build
 
 # Laravel folders
-RUN mkdir -p storage/framework/cache \
+RUN mkdir -p \
+    storage/framework/cache \
     storage/framework/sessions \
     storage/framework/views \
     storage/logs \
