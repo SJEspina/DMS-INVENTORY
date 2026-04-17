@@ -2,6 +2,7 @@
 FROM node:22 AS frontend
 
 WORKDIR /app
+
 COPY package*.json ./
 RUN npm install
 
@@ -14,7 +15,7 @@ FROM php:8.2-cli
 
 WORKDIR /app
 
-# System packages + PostgreSQL support
+# System packages + DB drivers
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
@@ -25,7 +26,14 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
-    && docker-php-ext-install pdo_pgsql pgsql \
+    default-mysql-client \
+    && docker-php-ext-install \
+        pdo \
+        pdo_mysql \
+        mysqli \
+        pdo_pgsql \
+        pgsql \
+        zip \
     && rm -rf /var/lib/apt/lists/*
 
 # Composer
@@ -37,10 +45,10 @@ COPY . /app
 # Copy built frontend assets
 COPY --from=frontend /app/public/build /app/public/build
 
-# Install PHP deps
+# Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# Laravel writable dirs
+# Writable dirs
 RUN mkdir -p \
     storage/framework/cache \
     storage/framework/sessions \
@@ -51,4 +59,4 @@ RUN mkdir -p \
 
 EXPOSE 10000
 
-CMD sh -c "php artisan optimize:clear && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-10000}"
+CMD sh -c "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-10000}"
