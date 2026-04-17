@@ -8,18 +8,8 @@ use App\Models\Order;
 use App\Models\Supply;
 use App\Models\SupplyTransaction;
 use Illuminate\Support\Carbon;
-use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-
-/*Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
-});*/
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -46,10 +36,6 @@ Route::get('/dashboard', function () {
 Route::get('/inventory', function () {
     return Inertia::render('Inventory');
 })->middleware(['auth'])->name('inventory');
-
-Route::get('/report', function () {
-    return Inertia::render('Report');
-})->middleware(['auth'])->name('report');
 
 Route::get('/user', function () {
     return Inertia::render('User');
