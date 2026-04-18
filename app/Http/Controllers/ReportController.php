@@ -19,22 +19,16 @@ class ReportController extends Controller
         $currentMonth = Carbon::now()->month;
         $daysInMonth = Carbon::now()->daysInMonth;
 
-        // Today's sale - match dashboard logic (price * qty)
+        // Today's sale - match dashboard logic (downpayment only)
         $todaySale = Order::whereDate('created_at', $today)
-            ->get()
-            ->sum(function ($order) {
-                return (float) $order->price * (int) $order->qty;
-            });
+            ->sum('downpayment');
 
         // Today's total orders
         $todayTotalOrders = Order::whereDate('created_at', $today)->count();
 
-        // Monthly sales total - match dashboard logic (price * qty)
+        // Monthly sales total - match dashboard logic (downpayment only)
         $monthlySales = Order::whereBetween('created_at', [$startOfMonth, $endOfMonth])
-            ->get()
-            ->sum(function ($order) {
-                return (float) $order->price * (int) $order->qty;
-            });
+            ->sum('downpayment');
 
         // Monthly expense total
         $monthlyExpense = SupplyTransaction::where('type', 'in')
@@ -52,15 +46,12 @@ class ReportController extends Controller
             ];
         })->values();
 
-        // Sales overview - all days of current month
+        // Sales overview - all days of current month (downpayment only)
         $salesOverview = collect(range(1, $daysInMonth))->map(function ($day) use ($currentYear, $currentMonth) {
             $date = Carbon::create($currentYear, $currentMonth, $day);
 
             $sales = Order::whereDate('created_at', $date)
-                ->get()
-                ->sum(function ($order) {
-                    return (float) $order->price * (int) $order->qty;
-                });
+                ->sum('downpayment');
 
             return [
                 'label' => $date->format('d M'),
